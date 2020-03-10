@@ -1,7 +1,11 @@
 #include <stdio.h>
 
+#include "dispatcher.h"
+
 int main( )
 {
-    printf("Hello, World!\n");
+    tester();
+
+    printf("---\n");
     return 0;
 }
