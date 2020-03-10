@@ -226,9 +226,6 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
         new_node->peer_head = new_node;
         new_node->parent = parent;
 
-        // char *msg = (parent != NULL) ? parent->node_name : "null";
-        // printf("%s: new list, added new node '%s' (parent is '%s')\n", __func__, new_node->node_name, msg);
-
         return new_node;
     }
     else {
@@ -239,7 +236,6 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
         dispatcher_entry *eptr = node->peer_head;
         while (eptr->peer != NULL) {
             if (strcmp(eptr->node_name, name) == 0) {
-                //printf("node '%s' exists 1\n", name);
                 return eptr;
             }
             eptr = eptr->peer;
@@ -247,18 +243,14 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
 
         // if eptr->node_name == name, we done
         if (strcmp(eptr->node_name, name) == 0) {
-            //printf("node '%s' exists 2\n", eptr->node_name);
             return eptr;
         }
-
-        //printf("added new node '%s' to '%s', parent is '%s'\n", name, node->node_name, parent->node_name);
 
         new_node->node_name = strdup(name);
         new_node->peer = NULL;
         new_node->children = NULL;
         new_node->peer_head = node->peer_head;
         new_node->parent = parent;
-        //new_node->handler = handler;
 
         eptr->peer = new_node;
 
@@ -279,8 +271,6 @@ static dispatcher_entry *add_child_node(dispatcher_entry *node, char *name)
 {
     dispatcher_entry *child_ptr = add_peer_node(node->children, node, name);
     node->children = child_ptr->peer_head;
-
-    //printf("%s: added child '%s' to parent '%s'\n", __func__, child_ptr->node_name, node->node_name);
 
     return child_ptr;
 }
@@ -304,8 +294,6 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
     char **split_path_list = NULL;
     size_t split_path_len = 0;
 
-    //printf("%s: registering %s @ %p\n", __func__, x->path, x->handler);
-
     if (*x->path != '/') {
         printf("%s: part '%s' must start at root\n", __func__, x->path);
         return NULL;
@@ -316,7 +304,6 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
      * up to create the elements of the dispatcher table
      */
     split_path(x->path, &split_path_list, &split_path_len);
-    //print_split(split_path_list, split_path_len);
 
     /*
      * the first element is always a peer to the top level
@@ -365,23 +352,27 @@ handler_function get_handler(dispatcher_entry *root, char *path)
     char **split_path_list = NULL;
     size_t split_path_len = 0;
 
+    /* cut the path up into individual elements */
     split_path(path, &split_path_list, &split_path_len);
     print_split(split_path_list, split_path_len);
 
     dispatcher_entry *ptr = root;
+
     for (int i = 0; i < split_path_len; i++) {
 
         char *query = split_path_list[i];
         ptr = find_peer(ptr, query);
 
         if (ptr == NULL) {
+            /* we ran out of matches, use last found handler */
             return hf;
         }
-
         if (ptr->handler != NULL) {
+            /* if handler is defined, save it */
             hf = ptr->handler;
         }
 
+        /* skip to next element */
         ptr = ptr->children;
     }
 
@@ -420,18 +411,16 @@ void tester(void)
         x++;
     }
 
-    dispatcher_entry *foo = htable;
-
     char *xpath = "/";
-    handler_function x2 = get_handler(foo, xpath);
+    handler_function x2 = get_handler(htable, xpath);
     (*x2)(xpath);
 
     xpath = "/node_a";
-    x2 = get_handler(foo, xpath);
+    x2 = get_handler(htable, xpath);
     (*x2)(xpath);
 
     xpath = "/node_a/node_aa";
-    x2 = get_handler(foo, xpath);
+    x2 = get_handler(htable, xpath);
     (*x2)(xpath);
 
     printf("done\n");
