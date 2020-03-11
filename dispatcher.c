@@ -140,9 +140,30 @@ static void split_path_free(char **list, size_t len)
 
 static void print_split(char **list, size_t len)
 {
-    printf("\n%lu elements: ", len);
+    printf("%lu elements: ", len);
     for (size_t i = 0; i < len; i++) {
         printf("['%s' @ %p]", list[i], (void *) list[i]);
+    }
+    printf("\n");
+}
+
+static void print_list(dispatcher_entry *ptr)
+{
+    printf("list ");
+
+    if (ptr == NULL) {
+        printf("[null]\n");
+        return;
+    }
+
+    dispatcher_entry *x = ptr->peer_head;
+
+    while (x != NULL) {
+        if (ptr == x) {
+            printf("@");
+        }
+        printf("[%s]", x->node_name);
+        x = x->peer;
     }
     printf("\n");
 }
@@ -160,27 +181,20 @@ static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
 {
     if ((node == NULL) || (node_name == NULL)) {
         /*  protect against idiot users */
-        return NULL;
-    }
-
-    if (strcmp(node_name, node->node_name) == 0) {
-        /* we're already at the desired node */
-        return node;
+        goto done;
     }
 
     dispatcher_entry *i = node->peer_head;
-    if (i == NULL) {
-        return NULL;
-    }
 
-    while (i->peer != NULL) {
+    while (i != NULL) {
         if (strcmp(node_name, i->node_name) == 0) {
-            return i;
+            break;
         }
         i = i->peer;
     }
 
-    return NULL;
+    done:
+    return i;
 }
 
 /**
@@ -237,7 +251,6 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
         /* possibly adding to the list */
 
         /* search for existing, or get tail end of list */
-
         dispatcher_entry *eptr = node->peer_head;
         while (eptr->peer != NULL) {
             if (strcmp(eptr->node_name, name) == 0) {
@@ -353,16 +366,25 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
 
 handler_function get_handler(dispatcher_entry *root, char *path)
 {
-    handler_function hf = NULL;
+    handler_function handler = NULL;
     char **split_path_list = NULL;
     size_t split_path_len = 0;
 
     /* cut the path up into individual elements */
     split_path(path, &split_path_list, &split_path_len);
-    print_split(split_path_list, split_path_len);
+
+    /* some elements may have keys defined, strip them off */
+    for (int i = 0; i < split_path_len; i++) {
+        char *kptr = strchr(split_path_list[i], '=');
+
+        if ((kptr != NULL) && (*kptr == '=')) {
+            *(kptr + 1) = 0;
+        }
+    }
 
     dispatcher_entry *ptr = root;
 
+    /* search down the tree */
     for (int i = 0; i < split_path_len; i++) {
 
         char *query = split_path_list[i];
@@ -370,17 +392,18 @@ handler_function get_handler(dispatcher_entry *root, char *path)
 
         if (ptr == NULL) {
             /* we ran out of matches, use last found handler */
-            return hf;
+            goto done;
         }
         if (ptr->handler != NULL) {
             /* if handler is defined, save it */
-            hf = ptr->handler;
+            handler = ptr->handler;
         }
 
         /* skip to next element */
         ptr = ptr->children;
     }
 
-    return hf;
+    done:
+    return handler;
 }
 
