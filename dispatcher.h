@@ -6,6 +6,7 @@
  * cache_data is a structure that can be used to pass stored
  * data around
  */
+
 typedef struct {
     char *cached_path;
 } cached_data;
@@ -15,6 +16,7 @@ typedef struct {
  * minimally needs the path it's working on, but probably
  * we want to hand down cached data somehow
  */
+
 typedef int (*handler_function)(char *path);
 
 /*
@@ -31,7 +33,6 @@ typedef struct {
  */
 
 struct _dispatcher_entry;
-//typedef struct _dispatcher_entry *dispatcher_table;
 typedef struct _dispatcher_entry dispatcher_entry;
 
 struct _dispatcher_entry {
@@ -70,11 +71,7 @@ struct _dispatcher_entry {
     handler_function handler;
 };
 
-
-
 dispatcher_entry *register_dispatcher_handler (dispatcher_entry **root, dispatcher_definition *x);
 handler_function get_handler (dispatcher_entry *root, char *path);
 
-void tester (void);
-
-#endif //DISPATCH_DISPATCHER_H
+#endif /* DISPATCH_DISPATCHER_H */

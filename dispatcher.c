@@ -1,6 +1,6 @@
 /*
  * we start with a series of dispatcher_definitions, which are a
- * tuplet of path and handler.
+ * path and handler.
  *
  * we break the path up into elements and build a tree out of them
  * example:
@@ -31,13 +31,19 @@
  *      [a]
  *          [b=]
  *          [b]
- *              [c]
  *
- * NOTE 1: there is no mechanism to free the created structures because
+ * NOTE 1: there is not a mechanism to free the created structures since
  * it is intended that this tree is created only at startup. if use case
- * changes, this function in trivial.
+ * changes, this function is trivial.
  *
- * NOTE 2: there is no attempt to optimize list searching here, sorry.
+ * NOTE 2: there is no attempt to optimize list searching here, sorry. I
+ * do not think that the known use cases will get big enough to make the
+ * tree get too large, i do not recommend that you encode every possible
+ * path, just top level key handlers.
+ *
+ * there are 2 functions to the API:
+ * register_dispatcher_handler(): build the dispatcher table
+ * get_handler(): query the dispatcher table
  */
 
 #include <stdio.h>
@@ -83,10 +89,9 @@ static int split_path(char *path, char ***plist, size_t *plist_len)
         ptr++;
     }
 
-    ptr = strtok (ptr, "/");
+    ptr = strtok(ptr, "/");
 
-    while (ptr != NULL)
-    {
+    while (ptr != NULL) {
         if (len > allocated) {
             /* we've run out of space, allocate a bigger list */
             allocated += PATH_CHUNKS;
@@ -96,7 +101,7 @@ static int split_path(char *path, char ***plist, size_t *plist_len)
         char *new_element = strdup(ptr);
         list[len++] = new_element;
 
-        ptr = strtok (NULL, "/");
+        ptr = strtok(NULL, "/");
     }
 
     *plist = list;
@@ -186,6 +191,7 @@ static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
  * @param node_name
  * @return pointer to found node
  */
+
 static dispatcher_entry *find_child(dispatcher_entry *node, char *node_name)
 {
     if ((node == NULL) || (node_name == NULL)) {
@@ -227,8 +233,7 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
         new_node->parent = parent;
 
         return new_node;
-    }
-    else {
+    } else {
         /* possibly adding to the list */
 
         /* search for existing, or get tail end of list */
@@ -379,49 +384,3 @@ handler_function get_handler(dispatcher_entry *root, char *path)
     return hf;
 }
 
-/*
- * ===== DEBUGGING CODE =====
- */
-
-int handler_default (char *path) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_a (char *path) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_b (char *path) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_ab (char *path) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_aba (char *path) { printf ("%s: '%s'\n", __func__, path); return 0; }
-
-dispatcher_definition test_table[] = {
-        { "/node_a", handler_a },
-        { "/node_a/node_aa", NULL },
-        { "/node_a/node_ab", handler_ab },
-        { "/node_a/node_ab/node_aba", handler_aba },
-        { "/node_b", handler_b },
-        { "/node_b/interface", handler_b },
-        { "/node_b/interface=", handler_b },
-        { "/", handler_default },
-        { NULL }
-};
-
-void tester(void)
-{
-    dispatcher_definition *x = test_table;
-    dispatcher_entry *htable = NULL;
-
-    while (x->path != NULL) {
-        register_dispatcher_handler(&htable, x);
-        x++;
-    }
-
-    char *xpath = "/";
-    handler_function x2 = get_handler(htable, xpath);
-    (*x2)(xpath);
-
-    xpath = "/node_a";
-    x2 = get_handler(htable, xpath);
-    (*x2)(xpath);
-
-    xpath = "/node_a/node_aa";
-    x2 = get_handler(htable, xpath);
-    (*x2)(xpath);
-
-    printf("done\n");
-}
