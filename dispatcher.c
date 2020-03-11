@@ -134,6 +134,8 @@ static void split_path_free(char **list, size_t len)
 /**
  * print out a list of elements from a split path
  *
+ * DEBUG ROUTINE
+ *
  * @param list
  * @param len
  */
@@ -147,6 +149,13 @@ static void print_split(char **list, size_t len)
     printf("\n");
 }
 
+/**
+ * print out a peer list from the tree
+ *
+ * DEBUG ROUTINE
+ *
+ * @param ptr
+ */
 static void print_list(dispatcher_entry *ptr)
 {
     printf("list ");
@@ -181,7 +190,7 @@ static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
 {
     if ((node == NULL) || (node_name == NULL)) {
         /*  protect against idiot users */
-        goto done;
+        return NULL;
     }
 
     dispatcher_entry *i = node->peer_head;
@@ -193,7 +202,6 @@ static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
         i = i->peer;
     }
 
-    done:
     return i;
 }
 
