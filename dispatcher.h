@@ -54,12 +54,6 @@ struct _dispatcher_entry {
     dispatcher_entry *peer_head;
 
     /*
-     * point at parent node
-     * if NULL then we are at the root node
-     */
-    dispatcher_entry *parent;
-
-    /*
      * points at peer_head of children list
      * if NULL, then no children
      */

@@ -64,13 +64,12 @@
  * characters. it is expected that api-paths are URI encoded, so no need
  * to deal with unescaped special characters like ', ", and /
  *
- * @param path
- * @param plist
- * @param plist_len
- * @return
+ * @param path [input] path string
+ * @param plist [output] pointer to split path array
+ * @param plist_len [output] pointer to storage space for path array length
  */
 
-static int split_path(char *path, char ***plist, size_t *plist_len)
+static void split_path(char *path, char ***plist, size_t *plist_len)
 {
     size_t allocated = PATH_CHUNKS;
 
@@ -108,15 +107,13 @@ static int split_path(char *path, char ***plist, size_t *plist_len)
     *plist_len = len;
 
     free(work);
-
-    return 0;
 }
 
 /**
  * free a split path structure
  *
- * @param list
- * @param len
+ * @param list [input] pointer to split path array
+ * @param len [input] length of split path array
  */
 
 static void split_path_free(char **list, size_t len)
@@ -124,10 +121,8 @@ static void split_path_free(char **list, size_t len)
     size_t i;
 
     for (i = 0; i < len; i++) {
-        char *x = list[i];
-        free(x);
+        free(list[i]);
     }
-
     free(list);
 }
 
@@ -136,8 +131,8 @@ static void split_path_free(char **list, size_t len)
  *
  * DEBUG ROUTINE
  *
- * @param list
- * @param len
+ * @param list [input] pointer to split path array
+ * @param len [input] length of split path array
  */
 
 static void print_split(char **list, size_t len)
@@ -152,10 +147,14 @@ static void print_split(char **list, size_t len)
 /**
  * print out a peer list from the tree
  *
+ * this routine will print out the entire list in order, the item
+ * originally passed in is indicated with an @ character
+ *
  * DEBUG ROUTINE
  *
- * @param ptr
+ * @param ptr [input] pointer to an element of q peer list
  */
+
 static void print_list(dispatcher_entry *ptr)
 {
     printf("list ");
@@ -181,9 +180,9 @@ static void print_list(dispatcher_entry *ptr)
  * find a peer of this node by name
  * search through the list pointed at by peer
  *
- * @param node
- * @param node_name
- * @return
+ * @param node [input] pointer to a node in the peer list
+ * @param node_name [input] name of node we're looking for
+ * @return pointer to found node or NULL
  */
 
 static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
@@ -206,41 +205,14 @@ static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
 }
 
 /**
- * find a direct child of this node
- * search through the list pointed at by children
- *
- * @param node
- * @param node_name
- * @return pointer to found node
- */
-
-static dispatcher_entry *find_child(dispatcher_entry *node, char *node_name)
-{
-    if ((node == NULL) || (node_name == NULL)) {
-        /*  protect against idiot users */
-        return NULL;
-    }
-
-    if ((node->children == NULL) || (node->children->peer_head == NULL)) {
-        return NULL;
-    }
-
-    dispatcher_entry *z = node->children->peer_head;
-    z = find_peer(z, node_name);
-
-    return z;
-}
-
-/**
  * add a node as the last node in peer list
  *
- * @param node
- * @param name
- * @param func
+ * @param node [input] pointer to an element of the peer list
+ * @param name [input] name of new node
  * @return pointer to added/existing node
  */
 
-static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry *parent, char *name)
+static dispatcher_entry *add_peer_node(dispatcher_entry *node, char *name)
 {
     dispatcher_entry *new_node = malloc(sizeof(dispatcher_entry));
     memset(new_node, 0, sizeof(dispatcher_entry));
@@ -252,7 +224,6 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
         new_node->peer = NULL;
         new_node->children = NULL;
         new_node->peer_head = new_node;
-        new_node->parent = parent;
 
         return new_node;
     } else {
@@ -276,7 +247,6 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
         new_node->peer = NULL;
         new_node->children = NULL;
         new_node->peer_head = node->peer_head;
-        new_node->parent = parent;
 
         eptr->peer = new_node;
 
@@ -287,15 +257,18 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, dispatcher_entry 
 /**
  * add a node as a child of this node
  *
- * @param node
- * @param name
- * @param func
- * @return pointer
+ * this is different from add_peer_node() in that it returns a
+ * pointer to the head_peer of the children list where the node was
+ * added.
+ *
+ * @param node [input] pointer to parent node of children list
+ * @param name [input] name of child node
+ * @return pointer to head of children list
  */
 
 static dispatcher_entry *add_child_node(dispatcher_entry *node, char *name)
 {
-    dispatcher_entry *child_ptr = add_peer_node(node->children, node, name);
+    dispatcher_entry *child_ptr = add_peer_node(node->children, name);
     node->children = child_ptr->peer_head;
 
     return child_ptr;
@@ -336,7 +309,7 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
      */
     dispatcher_entry *ptr = *root;
 
-    ptr = add_peer_node(ptr, NULL, split_path_list[0]);
+    ptr = add_peer_node(ptr, split_path_list[0]);
     if (*root == NULL) {
         *root = ptr;
     }
@@ -367,9 +340,9 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
 /**
  * given a path, return a handler for it
  *
- * @param root
- * @param path
- * @return
+ * @param root [input] pointer to root of dispatcher tree
+ * @param path [input] path to get handler for
+ * @return pointer to handler_function for path
  */
 
 handler_function get_handler(dispatcher_entry *root, char *path)
