@@ -2,15 +2,13 @@
 #ifndef DISPATCH_DISPATCHER_H
 #define DISPATCH_DISPATCHER_H
 
-#include "dispatch_local.h"
-
 /*
  * prototype for a function to handle the path
  * minimally needs the path it's working on, but probably
  * we want to hand down cached data somehow
  */
 
-typedef int (*handler_function)(char *path, handler_args_t *args);
+typedef int (*handler_function)(char *path, void *args);
 
 /*
  * this structure is used to map a handler to a path

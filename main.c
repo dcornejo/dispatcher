@@ -5,14 +5,14 @@
  * ===== DEBUGGING CODE =====
  */
 
-int handler_default(char *path, handler_args_t *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_a(char *path, handler_args_t *args) { printf ("%s: path is '%s'\n", __func__, path); return 0; }
-int handler_aa (char *path, handler_args_t *args) { printf ("%s: path is '%s'\n", __func__, path); return 0; }
-int handler_b (char *path, handler_args_t *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_ab (char *path, handler_args_t *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_aba (char *path, handler_args_t *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_binterface (char *path, handler_args_t *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_binterface_key (char *path, handler_args_t *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
+int handler_default(char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
+int handler_a(char *path, void *args) { printf ("%s: path is '%s'\n", __func__, path); return 0; }
+int handler_aa (char *path, void *args) { printf ("%s: path is '%s'\n", __func__, path); return 0; }
+int handler_b (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
+int handler_ab (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
+int handler_aba (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
+int handler_binterface (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
+int handler_binterface_key (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
 
 
 dispatcher_definition test_table[] = {

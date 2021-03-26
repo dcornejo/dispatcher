@@ -382,7 +382,7 @@ dispatcher_entry_t *register_dispatcher_handler(dispatcher_entry_t **root, dispa
 
 int call_handlers(dispatcher_entry_t *root, char *path)
 {
-    int ret = 1;
+    int ret = 0;
     dispatcher_entry_t *best = get_entry(root, path);
 
     if (best->children != NULL) {
