@@ -38,7 +38,7 @@
  *
  * NOTE 2: there is no attempt to optimize list searching here, sorry. I
  * do not think that the known use cases will get big enough to make the
- * tree get too large, i do not recommend that you encode every possible
+ * tree get too large. I do not recommend that you encode every possible
  * path, just top level key handlers.
  *
  * there are 2 functions to the API:
@@ -124,56 +124,6 @@ static void split_path_free(char **list, size_t len)
         free(list[i]);
     }
     free(list);
-}
-
-/**
- * print out a list of elements from a split path
- *
- * DEBUG ROUTINE
- *
- * @param list [input] pointer to split path array
- * @param len [input] length of split path array
- */
-
-static void print_split(char **list, size_t len)
-{
-    printf("%lu elements: ", len);
-    for (size_t i = 0; i < len; i++) {
-        printf("['%s' @ %p]", list[i], (void *) list[i]);
-    }
-    printf("\n");
-}
-
-/**
- * print out a peer list from the tree
- *
- * this routine will print out the entire list in order, the item
- * originally passed in is indicated with an @ character
- *
- * DEBUG ROUTINE
- *
- * @param ptr [input] pointer to an element of q peer list
- */
-
-static void print_list(dispatcher_entry *ptr)
-{
-    printf("list ");
-
-    if (ptr == NULL) {
-        printf("[null]\n");
-        return;
-    }
-
-    dispatcher_entry *x = ptr->peer_head;
-
-    while (x != NULL) {
-        if (ptr == x) {
-            printf("@");
-        }
-        printf("[%s]", x->node_name);
-        x = x->peer;
-    }
-    printf("\n");
 }
 
 /**
@@ -274,6 +224,79 @@ static dispatcher_entry *add_child_node(dispatcher_entry *node, char *name)
     return child_ptr;
 }
 
+/**
+ *
+ * @param root
+ * @param path
+ * @return
+ */
+
+static dispatcher_entry *get_entry(dispatcher_entry *root, char *path)
+{
+    char **split_path_list = NULL;
+    size_t split_path_len = 0;
+
+    /* cut the path up into individual elements */
+    split_path(path, &split_path_list, &split_path_len);
+
+    /* some elements may have keys defined, strip them off */
+    for (int i = 0; i < split_path_len; i++) {
+        char *kptr = strchr(split_path_list[i], '=');
+
+        if ((kptr != NULL) && (*kptr == '=')) {
+            *(kptr + 1) = 0;
+        }
+    }
+
+    dispatcher_entry *ptr = root;
+    dispatcher_entry *best = root;
+
+    /* search down the tree */
+    for (int i = 0; i < split_path_len; i++) {
+
+        char *query = split_path_list[i];
+        ptr = find_peer(ptr, query);
+
+        if (ptr == NULL) {
+            /* we ran out of matches, use last found handler */
+            return best;
+        }
+        if (ptr->handler != NULL) {
+            /* if handler is defined, save it */
+            best = ptr;
+        }
+
+        /* skip to next element */
+        ptr = ptr->children;
+    }
+
+    return best;
+}
+
+/**
+ * given a pointer to an entry, call the handler and all
+ * descendant handlers
+ *
+ * @param entry
+ * @param path
+ * @return
+ */
+
+static int call_handler_helper(dispatcher_entry *entry, char *path)
+{
+    if (entry->children != NULL) {
+        call_handler_helper(entry->children, path);
+    }
+    if (entry->peer != NULL) {
+        call_handler_helper(entry->peer, path);
+    }
+    if (entry->handler != NULL) {
+        (entry->handler) (path);
+    }
+
+    return 1;
+}
+
 /*
  * ===== PUBLIC API FUNCTIONS =====
  */
@@ -338,53 +361,25 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
 }
 
 /**
- * given a path, return a handler for it
+ * call the handler and all its descendant handlers
  *
- * @param root [input] pointer to root of dispatcher tree
- * @param path [input] path to get handler for
- * @return pointer to handler_function for path
+ * @param root
+ * @param path
+ * @return
  */
 
-handler_function get_handler(dispatcher_entry *root, char *path)
+int call_handlers(dispatcher_entry *root, char *path)
 {
-    handler_function handler = NULL;
-    char **split_path_list = NULL;
-    size_t split_path_len = 0;
+    int ret = 1;
+    dispatcher_entry *best = get_entry(root, path);
 
-    /* cut the path up into individual elements */
-    split_path(path, &split_path_list, &split_path_len);
-
-    /* some elements may have keys defined, strip them off */
-    for (int i = 0; i < split_path_len; i++) {
-        char *kptr = strchr(split_path_list[i], '=');
-
-        if ((kptr != NULL) && (*kptr == '=')) {
-            *(kptr + 1) = 0;
-        }
+    if (best->children != NULL) {
+        call_handler_helper(best->children, path);
+    }
+    if (best->handler != NULL) {
+        printf("best handler\n");
+        ret = (*best->handler) (path);
     }
 
-    dispatcher_entry *ptr = root;
-
-    /* search down the tree */
-    for (int i = 0; i < split_path_len; i++) {
-
-        char *query = split_path_list[i];
-        ptr = find_peer(ptr, query);
-
-        if (ptr == NULL) {
-            /* we ran out of matches, use last found handler */
-            goto done;
-        }
-        if (ptr->handler != NULL) {
-            /* if handler is defined, save it */
-            handler = ptr->handler;
-        }
-
-        /* skip to next element */
-        ptr = ptr->children;
-    }
-
-    done:
-    return handler;
+    return ret;
 }
-
