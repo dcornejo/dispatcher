@@ -143,14 +143,14 @@ static void split_path_free(char **list, size_t len)
  * @return pointer to found node or NULL
  */
 
-static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
+static dispatcher_entry_t *find_peer(dispatcher_entry_t *node, char *node_name)
 {
     if ((node == NULL) || (node_name == NULL)) {
         /*  protect against idiot users */
         return NULL;
     }
 
-    dispatcher_entry *i = node->peer_head;
+    dispatcher_entry_t *i = node->peer_head;
 
     while (i != NULL) {
         if (strcmp(node_name, i->node_name) == 0) {
@@ -170,10 +170,10 @@ static dispatcher_entry *find_peer(dispatcher_entry *node, char *node_name)
  * @return pointer to added/existing node
  */
 
-static dispatcher_entry *add_peer_node(dispatcher_entry *node, char *name)
+static dispatcher_entry_t *add_peer_node(dispatcher_entry_t *node, char *name)
 {
-    dispatcher_entry *new_node = malloc(sizeof(dispatcher_entry));
-    memset(new_node, 0, sizeof(dispatcher_entry));
+    dispatcher_entry_t *new_node = malloc(sizeof(dispatcher_entry_t));
+    memset(new_node, 0, sizeof(dispatcher_entry_t));
 
     if (node == NULL) {
         /* this is a new node */
@@ -188,7 +188,7 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, char *name)
         /* possibly adding to the list */
 
         /* search for existing, or get tail end of list */
-        dispatcher_entry *eptr = node->peer_head;
+        dispatcher_entry_t *eptr = node->peer_head;
         while (eptr->peer != NULL) {
             if (strcmp(eptr->node_name, name) == 0) {
                 return eptr;
@@ -224,9 +224,9 @@ static dispatcher_entry *add_peer_node(dispatcher_entry *node, char *name)
  * @return pointer to head of children list
  */
 
-static dispatcher_entry *add_child_node(dispatcher_entry *node, char *name)
+static dispatcher_entry_t *add_child_node(dispatcher_entry_t *node, char *name)
 {
-    dispatcher_entry *child_ptr = add_peer_node(node->children, name);
+    dispatcher_entry_t *child_ptr = add_peer_node(node->children, name);
     node->children = child_ptr->peer_head;
 
     return child_ptr;
@@ -239,10 +239,12 @@ static dispatcher_entry *add_child_node(dispatcher_entry *node, char *name)
  * @return
  */
 
-static dispatcher_entry *get_entry(dispatcher_entry *root, char *path)
+static dispatcher_entry_t *get_entry(dispatcher_entry_t *root, char *path)
 {
     char **split_path_list = NULL;
     size_t split_path_len = 0;
+    dispatcher_entry_t *ptr = root;
+    dispatcher_entry_t *best = root;
 
     /* cut the path up into individual elements */
     split_path(path, &split_path_list, &split_path_len);
@@ -255,9 +257,6 @@ static dispatcher_entry *get_entry(dispatcher_entry *root, char *path)
             *(kptr + 1) = 0;
         }
     }
-
-    dispatcher_entry *ptr = root;
-    dispatcher_entry *best = root;
 
     /* search down the tree */
     for (int i = 0; i < split_path_len; i++) {
@@ -290,7 +289,7 @@ static dispatcher_entry *get_entry(dispatcher_entry *root, char *path)
  * @return
  */
 
-static int call_handler_helper(dispatcher_entry *entry, char *path)
+static int call_handler_helper(dispatcher_entry_t *entry, char *path)
 {
     if (entry->children != NULL) {
         call_handler_helper(entry->children, path);
@@ -319,7 +318,7 @@ static int call_handler_helper(dispatcher_entry *entry, char *path)
  * @return
  */
 
-dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatcher_definition *x)
+dispatcher_entry_t *register_dispatcher_handler(dispatcher_entry_t **root, dispatcher_definition *x)
 {
     char **split_path_list = NULL;
     size_t split_path_len = 0;
@@ -338,7 +337,7 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
     /*
      * the first element is always a peer to the top level
      */
-    dispatcher_entry *ptr = *root;
+    dispatcher_entry_t *ptr = *root;
 
     ptr = add_peer_node(ptr, split_path_list[0]);
     if (*root == NULL) {
@@ -381,10 +380,10 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
  * @return
  */
 
-int call_handlers(dispatcher_entry *root, char *path)
+int call_handlers(dispatcher_entry_t *root, char *path)
 {
     int ret = 1;
-    dispatcher_entry *best = get_entry(root, path);
+    dispatcher_entry_t *best = get_entry(root, path);
 
     if (best->children != NULL) {
         call_handler_helper(best->children, path);

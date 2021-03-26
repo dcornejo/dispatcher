@@ -2,14 +2,7 @@
 #ifndef DISPATCH_DISPATCHER_H
 #define DISPATCH_DISPATCHER_H
 
-/*
- * cache_data is a structure that can be used to pass stored
- * data around
- */
-
-typedef struct {
-    char *cached_path;
-} cached_data;
+#include "dispatch_local.h"
 
 /*
  * prototype for a function to handle the path
@@ -17,7 +10,7 @@ typedef struct {
  * we want to hand down cached data somehow
  */
 
-typedef int (*handler_function)(char *path, void *args);
+typedef int (*handler_function)(char *path, handler_args_t *args);
 
 /*
  * this structure is used to map a handler to a path
@@ -28,12 +21,12 @@ typedef struct {
 } dispatcher_definition;
 
 /*
- * the dispatcher_entry is the structure created from
+ * the dispatcher_entry_t is the structure created from
  * the registered dispatcher_definitions
  */
 
 struct _dispatcher_entry;
-typedef struct _dispatcher_entry dispatcher_entry;
+typedef struct _dispatcher_entry dispatcher_entry_t;
 
 struct _dispatcher_entry {
     /*
@@ -42,22 +35,22 @@ struct _dispatcher_entry {
     char *node_name;
 
     /*
-     * peer points at peer to right of this one
+     * peer points at peer to the right of this one
      * if NULL then this is the rightmost and last on list
      */
-    dispatcher_entry *peer;
+    dispatcher_entry_t *peer;
 
     /*
      * peer_head points at leftmost peer at this level
      * if NULL, then this is the leftmost and first on the list
      */
-    dispatcher_entry *peer_head;
+    dispatcher_entry_t *peer_head;
 
     /*
      * points at peer_head of children list
      * if NULL, then no children
      */
-    dispatcher_entry *children;
+    dispatcher_entry_t *children;
 
     /*
      * pointer to handler function for this node
@@ -65,8 +58,8 @@ struct _dispatcher_entry {
     handler_function handler;
 };
 
-dispatcher_entry *register_dispatcher_handler (dispatcher_entry **root, dispatcher_definition *x);
-handler_function get_handler (dispatcher_entry *root, char *path);
-int call_handlers(dispatcher_entry *root, char *path);
+dispatcher_entry_t *register_dispatcher_handler (dispatcher_entry_t **root, dispatcher_definition *x);
+handler_function get_handler (dispatcher_entry_t *root, char *path);
+int call_handlers(dispatcher_entry_t *root, char *path);
 
 #endif /* DISPATCH_DISPATCHER_H */
