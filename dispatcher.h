@@ -17,7 +17,7 @@ typedef struct {
  * we want to hand down cached data somehow
  */
 
-typedef int (*handler_function)(char *path);
+typedef int (*handler_function)(char *path, void *args);
 
 /*
  * this structure is used to map a handler to a path

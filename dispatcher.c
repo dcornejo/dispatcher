@@ -283,7 +283,7 @@ static dispatcher_entry *get_entry(dispatcher_entry *root, char *path)
 
 /**
  * given a pointer to an entry, call the handler and all
- * descendant handlers
+ * descendant and peer handlers.
  *
  * @param entry
  * @param path
@@ -299,7 +299,7 @@ static int call_handler_helper(dispatcher_entry *entry, char *path)
         call_handler_helper(entry->peer, path);
     }
     if (entry->handler != NULL) {
-        (entry->handler) (path);
+        (entry->handler) (path, NULL);
     }
 
     return 1;
@@ -391,7 +391,7 @@ int call_handlers(dispatcher_entry *root, char *path)
     }
     if (best->handler != NULL) {
         printf("best handler\n");
-        ret = (*best->handler) (path);
+        ret = (*best->handler) (path, NULL);
     }
 
     return ret;
