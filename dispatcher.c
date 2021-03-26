@@ -43,7 +43,15 @@
  *
  * there are 2 functions to the API:
  * register_dispatcher_handler(): build the dispatcher table
- * get_handler(): query the dispatcher table
+ * call_handlers(): query the dispatcher table
+ */
+
+/*
+ * Important for writing handlers: a handler must return a complete
+ * valid response. It must operate in isolation, it must not expect
+ * any ordering in the calls and [under review] it should not call
+ * another handler directly or indirectly. Responses must me bound
+ * to a yang model and properly sorted and indexed.
  */
 
 #include <stdio.h>
@@ -362,6 +370,11 @@ dispatcher_entry *register_dispatcher_handler(dispatcher_entry **root, dispatche
 
 /**
  * call the handler and all its descendant handlers
+ *
+ * NOTE: There is no guarantee of the order in which handlers
+ * are called! Any handler must assume that it is called in
+ * isolation, even if this duplicates work. The right to
+ * reorder calls by this code is reserved.
  *
  * @param root
  * @param path
