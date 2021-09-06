@@ -289,16 +289,16 @@ static dispatcher_entry_t *get_entry(dispatcher_entry_t *root, char *path)
  * @return
  */
 
-static int call_handler_helper(dispatcher_entry_t *entry, char *path)
+static int call_handler_helper(dispatcher_entry_t *entry, char *path, void *user_args)
 {
     if (entry->children != NULL) {
-        call_handler_helper(entry->children, path);
+        call_handler_helper(entry->children, path, user_args);
     }
     if (entry->peer != NULL) {
-        call_handler_helper(entry->peer, path);
+        call_handler_helper(entry->peer, path, user_args);
     }
     if (entry->handler != NULL) {
-        (entry->handler) (path, NULL);
+        (entry->handler) (path, user_args);
     }
 
     return 1;
@@ -380,17 +380,16 @@ dispatcher_entry_t *register_dispatcher_handler(dispatcher_entry_t **root, dispa
  * @return
  */
 
-int call_handlers(dispatcher_entry_t *root, char *path)
+int call_handlers(dispatcher_entry_t *root, char *path, void *user_args)
 {
     int ret = 0;
     dispatcher_entry_t *best = get_entry(root, path);
 
     if (best->children != NULL) {
-        call_handler_helper(best->children, path);
+        call_handler_helper(best->children, path, user_args);
     }
     if (best->handler != NULL) {
-        printf("best handler\n");
-        ret = (*best->handler) (path, NULL);
+        ret = (*best->handler) (path, user_args);
     }
 
     return ret;

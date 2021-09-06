@@ -58,6 +58,6 @@ struct _dispatcher_entry {
 
 dispatcher_entry_t *register_dispatcher_handler (dispatcher_entry_t **root, dispatcher_definition *x);
 handler_function get_handler (dispatcher_entry_t *root, char *path);
-int call_handlers(dispatcher_entry_t *root, char *path);
+int call_handlers(dispatcher_entry_t *root, char *path, void *user_args);
 
 #endif /* DISPATCH_DISPATCHER_H */

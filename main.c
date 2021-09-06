@@ -5,14 +5,14 @@
  * ===== DEBUGGING CODE =====
  */
 
-int handler_default(char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_a(char *path, void *args) { printf ("%s: path is '%s'\n", __func__, path); return 0; }
-int handler_aa (char *path, void *args) { printf ("%s: path is '%s'\n", __func__, path); return 0; }
-int handler_b (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_ab (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_aba (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_binterface (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
-int handler_binterface_key (char *path, void *args) { printf ("%s: '%s'\n", __func__, path); return 0; }
+int handler_default(char *path, void *args) { printf ("%s(\"%s\"))\n", __func__, path); return 0; }
+int handler_a(char *path, void *args) { printf ("%s(\"%s\")\n", __func__, path); return 0; }
+int handler_aa (char *path, void *args) { printf ("%s(\"%s\")\n", __func__, path); return 0; }
+int handler_b (char *path, void *args) { printf ("%s(\"%s\")\n", __func__, path); return 0; }
+int handler_ab (char *path, void *args) { printf ("%s(\"%s\")\n", __func__, path); return 0; }
+int handler_aba (char *path, void *args) { printf ("%s(\"%s\")\n", __func__, path); return 0; }
+int handler_binterface (char *path, void *args) { printf ("%s(\"%s\")\n", __func__, path); return 0; }
+int handler_binterface_key (char *path, void *args) { printf ("%s(\"%s\")\n", __func__, path); return 0; }
 
 
 dispatcher_definition test_table[] = {
@@ -34,54 +34,61 @@ void tester(void)
     dispatcher_entry_t *htable = NULL;
     handler_function x2;
 
+    /* register handlers */
     while (x->path != NULL) {
         register_dispatcher_handler(&htable, x);
         x++;
     }
 
     char *xpath = "/";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
 
     xpath = "/a";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
 
     xpath = "/a/dead";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
 
     xpath = "/a/aa";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
 
     xpath = "/a/ab";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
 
     xpath = "/a/ab/aba";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
-
 
     xpath = "/a/aa/xxx";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
 
-
     xpath = "/b";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
 
     xpath = "/b/interface";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
-
 
     xpath = "/b/interface=eth0";
-    call_handlers(htable, xpath);
+    printf("trying '%s'\n", xpath);
+    call_handlers(htable, xpath, NULL);
     printf("====\n");
-
 
     printf("\ndone\n");
 }
