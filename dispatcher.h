@@ -1,3 +1,6 @@
+/*
+ * Copyright 2021 Rubicon Communications LLC (Netgate)
+ */
 
 #ifndef DISPATCH_DISPATCHER_H
 #define DISPATCH_DISPATCHER_H

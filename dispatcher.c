@@ -1,4 +1,8 @@
 /*
+ * Copyright 2021 Rubicon Communications LLC (Netgate)
+ */
+
+/*
  * we start with a series of dispatcher_definitions, which are a
  * path and handler.
  *
