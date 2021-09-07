@@ -3,4 +3,4 @@ project(dispatch C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(dispatch main.c dispatcher.c dispatcher.h)
+add_executable(dispatch main.c clixon_dispatcher.c clixon_dispatcher.h)

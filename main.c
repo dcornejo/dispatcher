@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "dispatcher.h"
+#include "clixon_dispatcher.h"
 
 /*
  * ===== DEBUGGING CODE =====
